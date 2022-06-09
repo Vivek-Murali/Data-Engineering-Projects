@@ -1,0 +1,89 @@
+version: '3.7'
+services:
+    postgres:
+        image: postgres:9.6
+        environment:
+            - POSTGRES_USER=airflow
+            - POSTGRES_PASSWORD=airflow
+            - POSTGRES_DB=airflow
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+    mongodb:
+        image: mongo
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=root
+            - MONGO_INITDB_ROOT_PASSWORD=pass12345
+        volumes:
+            - mongodata:/data/db
+        ports:
+            - 27017:27017
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+        restart: unless-stopped
+    
+    mongo-express:
+        image: mongo-express
+        environment:
+            - ME_CONFIG_MONGODB_SERVER=mongodb
+            - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+            - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+            - ME_CONFIG_MONGODB_ADMINPASSWORD=pass12345
+            - ME_CONFIG_BASICAUTH_USERNAME=admin
+            - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+        volumes:
+            - ./store_files:/data/db
+        depends_on:
+            - mongodb
+        ports:
+            - 8081:8081
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+        restart: unless-stopped
+
+    webserver:
+        image: puckel/docker-airflow:1.10.9
+        build:
+            context: https://github.com/puckel/docker-airflow.git#1.10.9
+            dockerfile: Dockerfile
+            args:
+                AIRFLOW_DEPS: gcp_api,s3
+                PYTHON_DEPS: sqlalchemy==1.3.0 wtforms==2.3.3 markupsafe==2.0.1 pymongo
+                BUILD_DEPS: nodejs,npm
+        restart: always
+        depends_on:
+            - postgres
+            - mongodb
+        environment:
+            - INSTALL_MONGO=y
+            - LOAD_EX=n
+            - EXECUTOR=Local
+            - AIRFLOW__SMTP__SMTP_HOST=smtp.gmail.com
+            - AIRFLOW__SMTP__SMTP_USER=example@gmail.com
+            - AIRFLOW__SMTP__SMTP_PASSWORD=hdwiondmyyobhlto
+            - AIRFLOW__SMTP__SMTP_PORT=587
+            - AIRFLOW__SMTP__SMTP_MAIL_FROM=Airflow
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+            - mongodata
+
+            # - ./plugins:/usr/local/airflow/plugins
+        ports:
+            - "8080:8080"
+        command: webserver
+        healthcheck:
+            test: ["CMD-SHELL", "[ -f /usr/local/airflow/airflow-webserver.pid ]"]
+            interval: 30s
+            timeout: 30s
+            retries: 3
+volumes:
+    mongodata:

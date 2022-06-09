@@ -1,13 +1,15 @@
 import pymongo
 import os
-from dotenv import load_dotenv
-load_dotenv()
+from utils import keys
+""" from dotenv import load_dotenv
+load_dotenv() """
 
 class Database(object):
-    USERNAME = os.getenv("DB_USERNAME")
-    PASSWORD = os.getenv("DB_PASSWORD")
-    URI = os.getenv("DB_URI")
-    database = os.getenv("DB_NAME")
+    Key = keys.Keys()
+    USERNAME = Key.DB_USERNAME
+    PASSWORD = Key.DB_PASSWORD
+    URI = Key.DB_URI
+    database = Key.DB_NAME
     DATABASE = None
 
     @staticmethod
@@ -42,7 +44,3 @@ class Database(object):
     @staticmethod
     def delete_one(collection, query):
         return Database.DATABASE[collection].delete_one(query)
-    
-    
-if __name__ == "__main__":
-    print("Checked")
