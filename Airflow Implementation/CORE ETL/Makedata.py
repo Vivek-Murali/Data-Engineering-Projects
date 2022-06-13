@@ -31,8 +31,25 @@ def push_data_into_one():
     Destination:str = os.path.join("json","Final")
     [shutil.move(os.path.join(path, name), os.path.join(Destination,name)) for path, subdirs, files in os.walk(os.path.join("json","Data")) for name in files if name.endswith('.json')]
     logger.info("Files Movement Completed")
+    
+def make_single_file(number:int=150000)->list:
+    files = [os.path.join('json/Final',f) for f in listdir(os.path.join("json","Final"))]
+    limited_files = files[:number]
+    output = []    
+    for item in limited_files: 
+        with open(item,'r') as fp:
+            data = json.load(fp)
+            fp.close() 
+        output.append(data)
+    logger.info("Number of Processed files %s"%len(output))
+    with open("final_copy.json",'w') as fp:
+        json.dump(output,fp)
+        fp.close()
+    logger.info("File Saved")
+    
 
 
 if __name__ == '__main__':
-    #extract_json_data("Data")
+    extract_json_data("Data")
     push_data_into_one()
+    make_single_file()
