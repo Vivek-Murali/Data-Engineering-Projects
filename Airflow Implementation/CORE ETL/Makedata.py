@@ -12,6 +12,11 @@ import shutil
 import random
 import aiofiles
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
+
+
+
+
 
 logger.basicConfig(format='%(asctime)s-%(levelname)s-%(message)s', level=logger.INFO, datefmt="%d-%b-%y %H:%M:%S")
 
@@ -38,20 +43,27 @@ def push_data_into_one():
     logger.info("Files Movement Completed")
     
     
-async def read_file_from_json(filename:str):
-    async with aiofiles.open(filename, mode='r') as f:
-        contents = await f.read()
-        aiofiles.close(f)
-    jsonfile = json.loads(contents)
+def read_file_from_json(filename:str):
+    logger.info("File Read from JSON:%s"%filename)
+    with open(filename, mode='r') as f:
+        jsonfile = json.load(f)
+        f.close()
     return jsonfile
     
 async def make_single_file(number:int=300000)->list:
-    files = [asyncio.ensure_future(read_file_from_json(os.path.join('json/Final',f))) for f in listdir(os.path.join("json","Final"))]
+    files = [os.path.join('json/Final',f) for f in listdir(os.path.join("json","Final"))]
     logger.info("Number Of Files Collected Successfully %s"%len(files))
-    moves_list = await asyncio.gather(*files)
-    async with aiofiles.open('final_copy.json', mode='w') as f:
-        await json.dump(moves_list,f)
-    logger.info("File Saved")
+    files = files[:number]
+    #moves_list = await asyncio.gather(*files)
+    #async with aiofiles.open('final_copy.json', mode='w') as f:
+    #    await json.dump(moves_list,f)
+    logger.info("File Sneakpeek:%s"%files[0])
+    with ThreadPoolExecutor(max_workers=15) as executor:
+        future =await list(executor.map(read_file_from_json,files))
+        
+    with open('final_copy_v2.json', 'w') as fp:
+        json.dump(future,fp)
+        fp.close()
     
     
 if __name__ == '__main__':

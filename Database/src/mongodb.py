@@ -13,7 +13,7 @@ class Database(object):
     @staticmethod
     def initialize():
         client = pymongo.MongoClient(Database.URI,username=Database.USERNAME,password=Database.PASSWORD)
-        Database.DATABASE = client.anime
+        Database.DATABASE = client[Database.database]
 
     @staticmethod
     def insert(collection, data):
@@ -43,6 +43,3 @@ class Database(object):
     def delete_one(collection, query):
         return Database.DATABASE[collection].delete_one(query)
     
-    
-if __name__ == "__main__":
-    print("Checked")
