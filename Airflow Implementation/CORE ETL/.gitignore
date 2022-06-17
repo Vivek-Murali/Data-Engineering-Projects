@@ -2,3 +2,6 @@ json/*
 Data/*
 *.xz
 *.json
+*.ipynb
+/.ipynb_checkpoints/
+.yml
