@@ -5,3 +5,4 @@ Data/*
 *.ipynb
 .ipynb_checkpoints/
 *.xml
+screen.log
