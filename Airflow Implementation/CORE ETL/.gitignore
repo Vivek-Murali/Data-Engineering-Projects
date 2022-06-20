@@ -3,6 +3,8 @@ Data/*
 *.xz
 *.json
 *.ipynb
-.ipynb_checkpoints/
+.ipynb_checkpoints
 *.xml
+manifest.xml
+Untitled.ipynb
 screen.log
