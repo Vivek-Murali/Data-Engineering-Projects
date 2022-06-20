@@ -1,2 +1,4 @@
 .env
 *.zip
+__pycache__
+*.json

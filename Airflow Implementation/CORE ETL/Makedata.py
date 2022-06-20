@@ -13,10 +13,10 @@ import random
 import aiofiles
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from Database.src import (AstraDatabase, CassandraDatabase, UtilityFunctions)
 
 
-
-
+COUNTER = 0
 
 logger.basicConfig(format='%(asctime)s-%(levelname)s-%(message)s', level=logger.INFO, datefmt="%d-%b-%y %H:%M:%S")
 
@@ -48,25 +48,42 @@ def read_file_from_json(filename:str):
     with open(filename, mode='r') as f:
         jsonfile = json.load(f)
         f.close()
-    return jsonfile
+    result = UtilityFunctions.makecoreresponse(jsonfile)
+    response = AstraDatabase.insertrow(result,'datasource_core')
+    logger.info("File Response:%s"%response)
     
-async def make_single_file(number:int=300000)->list:
+def create_table(properties:dict):
+    return AstraDatabase.createtable(properties)
+    
+async def make_single_file(number:int=1000000)->list:
     files = [os.path.join('json/Final',f) for f in listdir(os.path.join("json","Final"))]
     logger.info("Number Of Files Collected Successfully %s"%len(files))
     files = files[:number]
-    #moves_list = await asyncio.gather(*files)
-    #async with aiofiles.open('final_copy.json', mode='w') as f:
-    #    await json.dump(moves_list,f)
-    logger.info("File Sneakpeek:%s"%files[0])
     with ThreadPoolExecutor(max_workers=15) as executor:
-        future =await list(executor.map(read_file_from_json,files))
-        
-    with open('final_copy_v2.json', 'w') as fp:
-        json.dump(future,fp)
-        fp.close()
+        executor.map(read_file_from_json,files)
     
     
 if __name__ == '__main__':
     #extract_json_data("Data")
     #push_data_into_one()
+    #asyncio.run(make_single_file())
+    CassandraDatabase.check_connection()
+    """ print(AstraDatabase.createudt({
+                    "name": "journals",
+                    "ifNotExists": True,
+                    "fields": [
+                            {
+                            "name": "identifiers",
+                            "typeDefinition": "list<text>"
+                            },
+                            {
+                                "name": "title",
+                                "typeDefinition": "text"
+                            }]}))
+    with open("properties.json",'r') as fp:
+        properties = json.load(fp)
+        fp.close()
+    print(AstraDatabase.deletetable('datasource_core'))
+    print(create_table(properties)) """
     asyncio.run(make_single_file())
+    #rows = CassandraDatabase.fetchall('datasource_core')

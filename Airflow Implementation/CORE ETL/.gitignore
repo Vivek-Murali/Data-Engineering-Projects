@@ -3,5 +3,5 @@ Data/*
 *.xz
 *.json
 *.ipynb
-/.ipynb_checkpoints/
-.yml
+.ipynb_checkpoints/
+*.xml
